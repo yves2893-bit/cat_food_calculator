@@ -1,0 +1,278 @@
+
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>貓糧氯化鉀&氯化鈉補充計算機</title>
+    <style>
+        *, *::before, *::after {
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: #f4f7f6;
+            color: #333;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 600px;
+            margin: 30px auto;
+            background: #ffffff;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        }
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            font-size: 24px;
+            margin-bottom: 25px;
+            font-weight: 700;
+        }
+        .section-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #34495e;
+            margin-top: 20px;
+            margin-bottom: 15px;
+            padding-bottom: 5px;
+            border-bottom: 2px solid #edf2f7;
+        }
+        .form-group {
+            margin-bottom: 18px;
+        }
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 500;
+            color: #4a5568;
+            font-size: 14px;
+        }
+        input[type="number"] {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #cbd5e0;
+            border-radius: 6px;
+            font-size: 15px;
+            transition: border-color 0.2s;
+            -moz-appearance: textfield;
+        }
+        input[type="number"]::-webkit-outer-spin-button,
+        input[type="number"]::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        input[type="number"]:focus {
+            outline: none;
+            border-color: #3182ce;
+            box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.15);
+        }
+        .error-message {
+            color: #e53e3e;
+            background-color: #fff5f5;
+            border: 1px solid #fed7d7;
+            padding: 10px 12px;
+            border-radius: 6px;
+            font-size: 14px;
+            margin-bottom: 18px;
+            display: none;
+        }
+        .result-card {
+            background-color: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 25px;
+        }
+        .result-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #edf2f7;
+            font-size: 15px;
+        }
+        .result-row:last-child {
+            border-bottom: none;
+        }
+        .result-label {
+            color: #4a5568;
+        }
+        .result-value {
+            font-weight: 600;
+            color: #2d3748;
+        }
+        .highlight {
+            color: #2b6cb0;
+            font-weight: 700;
+        }
+        .btn-calc {
+            width: 100%;
+            padding: 12px;
+            background-color: #3182ce;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            margin-top: 10px;
+        }
+        .btn-calc:hover {
+            background-color: #2b6cb0;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>貓糧氯化鉀&氯化鈉補充計算機</h1>
+    
+    <div class="error-message" id="errorMsg">提示：目標增加鉀含量必須介於 0.1 至 0.5 之間！</div>
+    
+    <div class="section-title">輸入參數</div>
+    
+    <div class="form-group">
+        <label for="me">1. 貓糧代謝能 (kcal/kg)</label>
+        <input type="number" id="me" value="4000" placeholder="例如: 4000">
+    </div>
+    
+    <div class="form-group">
+        <label for="moisture">2. 貓糧含水比例 (%)</label>
+        <input type="number" id="moisture" value="10" placeholder="例如: 10">
+    </div>
+    
+    <div class="form-group">
+        <label for="totalWeight">3. 本次添糧總重 (g)</label>
+        <input type="number" id="totalWeight" value="100" placeholder="例如: 100">
+    </div>
+    
+    <div class="form-group">
+        <label for="targetK">4. 目標增加鉀含量 (g/MJ)</label>
+        <input type="number" id="targetK" step="0.01" value="0.3" placeholder="範圍: 0.1 - 0.5">
+    </div>
+
+    <button class="btn-calc" onclick="calculate()">執行計算</button>
+
+    <div class="result-card">
+        <div class="section-title" style="margin-top: 0;">1. 建議添加量</div>
+        <div class="result-row">
+            <span class="result-label">氯化鉀 (KCl) 添加量</span>
+            <span class="result-value highlight" id="kclAdd">0.0000 g</span>
+        </div>
+        <div class="result-row">
+            <span class="result-label">氯化鈉 (NaCl) 添加量</span>
+            <span class="result-value highlight" id="naclAdd">0.0000 g</span>
+        </div>
+
+        <div class="section-title">2. 添加後乾物重比例 (DM basis)</div>
+        <div class="result-row">
+            <span class="result-label">氯化鉀 (KCl) 分率</span>
+            <span class="result-value" id="dmKCl">0.00%</span>
+        </div>
+        <div class="result-row">
+            <span class="result-label">鉀 (K) 元素分率</span>
+            <span class="result-value" id="dmK">0.00%</span>
+        </div>
+        <div class="result-row">
+            <span class="result-label">氯化鈉 (NaCl) 分率</span>
+            <span class="result-value" id="dmNaCl">0.00%</span>
+        </div>
+        <div class="result-row">
+            <span class="result-label">鈉 (Na) 元素分率</span>
+            <span class="result-value" id="dmNa">0.00%</span>
+        </div>
+        <div class="result-row">
+            <span class="result-label">氯 (Cl) 元素分率</span>
+            <span class="result-value" id="dmCl">0.00%</span>
+        </div>
+    </div>
+</div>
+
+<script>
+function calculate() {
+    // 獲取輸入值
+    const me = parseFloat(document.getElementById('me').value) || 0;
+    const moisture = parseFloat(document.getElementById('moisture').value) || 0;
+    const totalWeight = parseFloat(document.getElementById('totalWeight').value) || 0;
+    const targetK = parseFloat(document.getElementById('targetK').value) || 0;
+    
+    const errorMsg = document.getElementById('errorMsg');
+    
+    // 驗證目標增加鉀含量限制 0.1 - 0.5
+    if (targetK < 0.1 || targetK > 0.5) {
+        errorMsg.style.display = 'block';
+        clearOutputs();
+        return;
+    } else {
+        errorMsg.style.display = 'none';
+    }
+
+    // 常數設定
+    const KCAL_TO_MJ = 0.004184;
+    const K_RATIO_IN_KCL = 0.52446;
+    const NA_RATIO_IN_NACL = 0.39339;
+    const CL_RATIO_IN_KCL = 0.47554;
+    const CL_RATIO_IN_NACL = 0.60661;
+
+    // 1. 計算總能量 (MJ)
+    // 總能量 = (添糧重 / 1000) * 代謝能 * 0.004184
+    const totalMJ = (totalWeight / 1000) * me * KCAL_TO_MJ;
+
+    // 2. 計算所需的元素重 (g)
+    const reqK = totalMJ * targetK;
+    const reqNa = reqK / 3; // 鉀:鈉 = 3:1
+
+    // 3. 計算所需的鹽類重 (g)
+    const kclAdd = reqK / K_RATIO_IN_KCL;
+    const naclAdd = reqNa / NA_RATIO_IN_NACL;
+    const clAdd = (kclAdd * CL_RATIO_IN_KCL) + (naclAdd * CL_RATIO_IN_NACL);
+
+    // 4. 計算乾物重 (DM Basis) 比例
+    // 原糧乾物重 = 總重 * (1 - 含水率 / 100)
+    const dryFoodMass = totalWeight * (1 - (moisture / 100));
+    // 添加後的總乾物重 = 原糧乾物重 + 額外添加的鹽類重量
+    const totalDM = dryFoodMass + kclAdd + naclAdd;
+
+    if (totalDM > 0) {
+        const dmKClPct = (kclAdd / totalDM) * 100;
+        const dmKPct = (reqK / totalDM) * 100;
+        const dmNaClPct = (naclAdd / totalDM) * 100;
+        const dmNaPct = (reqNa / totalDM) * 100;
+        const dmClPct = (clAdd / totalDM) * 100;
+
+        // 渲染輸出結果
+        document.getElementById('kclAdd').innerText = kclAdd.toFixed(4) + ' g';
+        document.getElementById('naclAdd').innerText = naclAdd.toFixed(4) + ' g';
+        
+        document.getElementById('dmKCl').innerText = dmKClPct.toFixed(2) + '%';
+        document.getElementById('dmK').innerText = dmKPct.toFixed(2) + '%';
+        document.getElementById('dmNaCl').innerText = dmNaClPct.toFixed(2) + '%';
+        document.getElementById('dmNa').innerText = dmNaPct.toFixed(2) + '%';
+        document.getElementById('dmCl').innerText = dmClPct.toFixed(2) + '%';
+    } else {
+        clearOutputs();
+    }
+}
+
+function clearOutputs() {
+    document.getElementById('kclAdd').innerText = '0.0000 g';
+    document.getElementById('naclAdd').innerText = '0.0000 g';
+    document.getElementById('dmKCl').innerText = '0.00%';
+    document.getElementById('dmK').innerText = '0.00%';
+    document.getElementById('dmNaCl').innerText = '0.00%';
+    document.getElementById('dmNa').innerText = '0.00%';
+    document.getElementById('dmCl').innerText = '0.00%';
+}
+
+// 初始執行一次
+calculate();
+</script>
+
+</body>
+</html>
+cat_food_calculator.html
+目前顯示的是「cat_food_calculator.html」。
